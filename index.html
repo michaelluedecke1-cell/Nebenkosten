@@ -424,15 +424,15 @@
             color: #e0e0e0;
             font-size: 15px;
         }
-        .analyse-box .jahr-karte .ergebnis {
+        .analyse-box .jahr-karte .saldo {
             font-weight: 700;
             font-size: 16px;
             min-width: 80px;
             text-align: right;
         }
-        .analyse-box .jahr-karte .ergebnis.positiv { color: #3bb87a; }
-        .analyse-box .jahr-karte .ergebnis.negativ { color: #e74c3c; }
-        .analyse-box .jahr-karte .ergebnis.null { color: #8888a0; }
+        .analyse-box .jahr-karte .saldo.positiv { color: #3bb87a; }
+        .analyse-box .jahr-karte .saldo.negativ { color: #e74c3c; }
+        .analyse-box .jahr-karte .saldo.null { color: #8888a0; }
 
         .analyse-box .gesamt-box {
             margin-top: 12px;
@@ -504,12 +504,12 @@
                 color: #111 !important;
             }
             .analyse-box .kopf .zeile .wert,
-            .analyse-box .jahr-karte .ergebnis,
+            .analyse-box .jahr-karte .saldo,
             .analyse-box .gesamt-box .wert {
                 color: #111 !important;
             }
-            .analyse-box .jahr-karte .ergebnis.positiv { color: #0b8a5e !important; }
-            .analyse-box .jahr-karte .ergebnis.negativ { color: #e74c3c !important; }
+            .analyse-box .jahr-karte .saldo.positiv { color: #0b8a5e !important; }
+            .analyse-box .jahr-karte .saldo.negativ { color: #e74c3c !important; }
             .analyse-box .kopf .zeile .wert.positiv { color: #0b8a5e !important; }
             .analyse-box .kopf .zeile .wert.negativ { color: #e74c3c !important; }
             .analyse-box .gesamt-box .wert.positiv { color: #0b8a5e !important; }
@@ -535,7 +535,7 @@
             .analyse-box .kopf .zeile { font-size: 14px; }
             .analyse-box .kopf .zeile .wert { font-size: 16px; }
             .analyse-box .jahr-karte { padding: 10px 12px; font-size: 14px; }
-            .analyse-box .jahr-karte .ergebnis { font-size: 14px; min-width: 60px; }
+            .analyse-box .jahr-karte .saldo { font-size: 14px; min-width: 60px; }
         }
     </style>
 </head>
@@ -574,7 +574,7 @@
             </div>
 
             <div class="voraus-row">
-                <label for="vorausBetrag">💰 Voraus (gesamt)</label>
+                <label for="vorausBetrag">💰 Voraus (Mieter, gesamt)</label>
                 <input type="number" id="vorausBetrag" placeholder="z.B. 1800" value="" step="0.01" min="0">
                 <button class="btn" id="vorausBtn">Speichern</button>
             </div>
@@ -589,7 +589,7 @@
             </div>
         </div>
 
-        <!-- TAB 2: Berechnung -->
+        <!-- TAB 2: Berechnung (korrigierte Logik) -->
         <div class="tab-content" id="tab-berechnung">
             <div class="detail-box" id="detailBox">
                 <div id="detailInhalt">
@@ -598,17 +598,17 @@
             </div>
         </div>
 
-        <!-- TAB 3: Analyse (kein Aktualisieren-Button) -->
+        <!-- TAB 3: Analyse (zeigt Mieter-Saldo) -->
         <div class="tab-content" id="tab-analyse">
             <div class="analyse-box">
-                <h2 style="font-size:17px; color:#e0e0e0; margin-bottom:12px;">📊 Übersicht</h2>
+                <h2 style="font-size:17px; color:#e0e0e0; margin-bottom:12px;">📊 Übersicht (Mieter-Saldo)</h2>
                 <div id="analyseInhalt">
                     <p style="color:#8888a0; text-align:center; padding:16px 0;">Lade Daten...</p>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 4: Backup (mit PDF-Button) -->
+        <!-- TAB 4: Backup -->
         <div class="tab-content" id="tab-backup">
             <div class="backup-box">
                 <button class="big-btn export" id="backupBtn">📤 Exportieren (JSON)</button>
@@ -805,7 +805,7 @@
                     if (voraus > 0) {
                         html += `
                             <div class="item" data-type="voraus">
-                                <span class="name">💰 Vorauszahlung (gesamt)</span>
+                                <span class="name">💰 Vorauszahlung (Mieter, gesamt)</span>
                                 <span class="tag voraus">Voraus</span>
                                 <span class="betrag" style="color:#3bb87a;">${formatter.format(voraus)}</span>
                                 <div class="actions">
@@ -867,11 +867,11 @@
                 speichern();
             }
 
-            // ----- Rendern Berechnung -----
+            // ----- Rendern Berechnung (korrigierte Logik) -----
             function renderBerechnung() {
                 const pos = getPositionen(aktuellesJahr);
-                const vor = getVoraus(aktuellesJahr);
-                if (pos.length === 0 && vor === 0) {
+                const voraus = getVoraus(aktuellesJahr);
+                if (pos.length === 0 && voraus === 0) {
                     detailInhalt.innerHTML = `<p style="color:#8888a0; text-align:center; padding:16px 0;">Keine Daten für ${aktuellesJahr}.</p>`;
                     return;
                 }
@@ -884,52 +884,60 @@
                     if (p.nichtTeilen) nicht += p.betrag;
                     else zuTeilen += p.betrag;
                 });
-                const halb = zuTeilen / 2;
-                const vermieterBrutto = halb + nicht;
-                const ergebnis = vor - vermieterBrutto;
+                const mieterAnteil = zuTeilen / 2;
+                const vermieterAnteil = mieterAnteil + nicht;
+                const saldoMieter = voraus - mieterAnteil;   // positiv = Mieter bekommt Geld zurück
+                const saldoVermieter = vermieterAnteil - voraus; // positiv = Vermieter muss noch zahlen
 
                 let html = `
                     <h3 style="margin-bottom:10px; font-size:16px; color:#e0e0e0;">📅 ${aktuellesJahr} – Berechnung</h3>
                     <div class="detail-zeile">
-                        <span class="lbl">📊 Gesamt</span>
+                        <span class="lbl">📊 Gesamt (alle Nebenkosten)</span>
                         <span class="val">${formatter.format(gesamt)}</span>
                     </div>
                     <div class="detail-zeile">
-                        <span class="lbl" style="color:#e74c3c;">🚫 nicht geteilt</span>
+                        <span class="lbl" style="color:#e74c3c;">🚫 Nicht geteilt (nur Vermieter)</span>
                         <span class="val rot">${formatter.format(nicht)}</span>
                     </div>
                     <div class="detail-zeile">
-                        <span class="lbl">📊 zu teilen</span>
+                        <span class="lbl">📊 Zu teilende Summe</span>
                         <span class="val">${formatter.format(zuTeilen)}</span>
                     </div>
                     <div class="detail-zeile">
-                        <span class="lbl">🧑‍💼 Mieter (½)</span>
-                        <span class="val blau">${formatter.format(halb)}</span>
+                        <span class="lbl">🧑‍💼 Mieter-Anteil (½)</span>
+                        <span class="val blau">${formatter.format(mieterAnteil)}</span>
                     </div>
                     <div class="detail-zeile">
-                        <span class="lbl" style="color:#3bb87a;">💰 Voraus</span>
-                        <span class="val gruen">${formatter.format(vor)}</span>
+                        <span class="lbl">🏢 Vermieter-Anteil (½ + nicht geteilt)</span>
+                        <span class="val">${formatter.format(vermieterAnteil)}</span>
+                    </div>
+                    <div class="detail-zeile">
+                        <span class="lbl" style="color:#3bb87a;">💰 Vorauszahlung (Mieter)</span>
+                        <span class="val gruen">${formatter.format(voraus)}</span>
                     </div>
                     <div class="detail-zeile" style="border-bottom:2px solid #2a2a3a;">
-                        <span class="lbl">📊 Vermieter (brutto)</span>
-                        <span class="val">${formatter.format(vermieterBrutto)}</span>
+                        <span class="lbl">📊 Saldo Vermieter (muss zahlen / bekommt)</span>
+                        <span class="val ${saldoVermieter > 0 ? 'rot' : (saldoVermieter < 0 ? 'gruen' : '')}">${formatter.format(saldoVermieter)}</span>
                     </div>
-                    <div class="highlight-box">
-                        <span class="lbl">💰 Vermieter (netto)</span>
-                        <span class="val ${ergebnis > 0 ? 'gruen' : (ergebnis < 0 ? 'rot' : '')}">${formatter.format(ergebnis)}</span>
+                    <div class="highlight-box" style="background:#1a2a2a;">
+                        <span class="lbl">💰 Saldo Mieter (Rückzahlung / Nachzahlung)</span>
+                        <span class="val ${saldoMieter > 0 ? 'gruen' : (saldoMieter < 0 ? 'rot' : '')}">${formatter.format(saldoMieter)}</span>
                     </div>
                     <div class="highlight-box" style="background:#1a2a2a; margin-top:6px;">
-                        <span class="lbl">📊 Mieter zahlt</span>
-                        <span class="val gruen">${formatter.format(halb)}</span>
+                        <span class="lbl">📊 Mieter zahlt (Soll)</span>
+                        <span class="val blau">${formatter.format(mieterAnteil)}</span>
                     </div>
                     <div class="erklaerung">
-                        <strong>💡</strong> <span style="color:#3bb87a;">Positiv</span> = Guthaben für Vermieter · <span style="color:#e74c3c;">Negativ</span> = Nachzahlung
+                        <strong>💡 Erklärung:</strong><br>
+                        • <span style="color:#3bb87a;">Positiver Saldo Mieter</span> = Mieter bekommt Geld zurück (Guthaben).<br>
+                        • <span style="color:#e74c3c;">Negativer Saldo Mieter</span> = Mieter muss nachzahlen.<br>
+                        • Der Saldo des Vermieters ist das Gegenstück (aber unter Berücksichtigung der nicht geteilten Kosten).
                     </div>
                 `;
                 detailInhalt.innerHTML = html;
             }
 
-            // ----- Rendern Analyse (ohne Button, automatisch) -----
+            // ----- Rendern Analyse (zeigt Mieter-Saldo) -----
             function renderAnalyse() {
                 const jahre = getJahre();
                 if (jahre.length === 0) {
@@ -939,33 +947,39 @@
 
                 let sumKosten = 0,
                     sumVoraus = 0,
-                    sumErgebnis = 0;
+                    sumSaldoMieter = 0;
 
                 let kopfHtml = `<div class="kopf">`;
                 let jahrKartenHtml = `<div class="jahr-liste">`;
                 jahre.forEach(j => {
                     const pos = getPositionen(j);
                     const vor = getVoraus(j);
-                    let kosten = 0;
-                    pos.forEach(p => kosten += p.betrag);
-                    const erg = vor - kosten;
+                    let kosten = 0,
+                        zuTeilen = 0;
+                    pos.forEach(p => {
+                        kosten += p.betrag;
+                        if (!p.nichtTeilen) zuTeilen += p.betrag;
+                    });
+                    const mieterAnteil = zuTeilen / 2;
+                    const saldo = vor - mieterAnteil;
                     sumKosten += kosten;
                     sumVoraus += vor;
-                    sumErgebnis += erg;
+                    sumSaldoMieter += saldo;
 
-                    const ergClass = erg > 0 ? 'positiv' : (erg < 0 ? 'negativ' : 'null');
+                    const saldoClass = saldo > 0 ? 'positiv' : (saldo < 0 ? 'negativ' : 'null');
+                    const statusText = saldo > 0 ? '💰 Rückzahlung' : (saldo < 0 ? '💸 Nachzahlung' : '⚖️ Ausgeglichen');
                     jahrKartenHtml += `
                         <div class="jahr-karte">
                             <span class="jahr">${j}</span>
                             <span class="kosten">Kosten ${formatter.format(kosten)}</span>
-                            <span class="ergebnis ${ergClass}">${formatter.format(erg)}</span>
+                            <span class="saldo ${saldoClass}">${formatter.format(saldo)}</span>
                         </div>
                     `;
                 });
                 jahrKartenHtml += `</div>`;
 
-                const gesamtErgClass = sumErgebnis > 0 ? 'positiv' : (sumErgebnis < 0 ? 'negativ' : 'null');
-                const gesamtText = sumErgebnis > 0 ? 'Guthaben für Vermieter' : (sumErgebnis < 0 ? 'Nachzahlung durch Vermieter' :
+                const gesamtSaldoClass = sumSaldoMieter > 0 ? 'positiv' : (sumSaldoMieter < 0 ? 'negativ' : 'null');
+                const gesamtText = sumSaldoMieter > 0 ? 'Guthaben für Mieter' : (sumSaldoMieter < 0 ? 'Nachzahlung durch Mieter' :
                     'Ausgeglichen');
 
                 kopfHtml += `
@@ -974,13 +988,13 @@
                         <span class="wert">${formatter.format(sumKosten)}</span>
                     </div>
                     <div class="zeile">
-                        <span class="label">💰 Vorauszahlungen</span>
+                        <span class="label">💰 Vorauszahlungen (Mieter)</span>
                         <span class="wert">${formatter.format(sumVoraus)}</span>
                     </div>
                     <div class="zeile" style="border-top:1px solid #2a2a3a; padding-top:6px; margin-top:4px;">
-                        <span class="label">📈 Ergebnis</span>
+                        <span class="label">📈 Saldo Mieter (gesamt)</span>
                         <span>
-                            <span class="wert ${gesamtErgClass}">${formatter.format(sumErgebnis)}</span>
+                            <span class="wert ${gesamtSaldoClass}">${formatter.format(sumSaldoMieter)}</span>
                             <span class="status">(${gesamtText})</span>
                         </span>
                     </div>
@@ -989,14 +1003,14 @@
 
                 const gesamtBoxHtml = `
                     <div class="gesamt-box">
-                        <span class="label">📊 Gesamtergebnis</span>
-                        <span class="wert ${gesamtErgClass}">${formatter.format(sumErgebnis)}</span>
+                        <span class="label">📊 Gesamtsaldo Mieter</span>
+                        <span class="wert ${gesamtSaldoClass}">${formatter.format(sumSaldoMieter)}</span>
                     </div>
                 `;
 
                 const erklaerung = `
                     <div class="erklaerung">
-                        <strong>💡</strong> <span style="color:#3bb87a;">Positiv</span> = Vermieter hat zu viel gezahlt (Guthaben) · <span style="color:#e74c3c;">Negativ</span> = Vermieter muss nachzahlen.
+                        <strong>💡</strong> <span style="color:#3bb87a;">Positiv</span> = Mieter bekommt Geld zurück (Guthaben) · <span style="color:#e74c3c;">Negativ</span> = Mieter muss nachzahlen.
                     </div>
                 `;
 
