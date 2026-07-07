@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nebenkosten-v1';
+const CACHE_NAME = 'nebenkosten-v1.5';
 const urlsToCache = [
   'index.html',
   'manifest.json',
