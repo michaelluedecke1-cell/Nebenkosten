@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Nebenkosten</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        /* ----- DARK MODE BASIS ----- */
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #12121a;
+            display: flex;
+            justify-content: center;
+            padding: 16px;
+            color: #e0e0e0;
+        }
+        .app {
+            max-width: 720px;
+            width: 100%;
+            background: #1a1a2a;
+            border-radius: 28px;
+            padding: 20px 16px 24px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #f0f0f0;
+        }
+        /* Badge entfernt */
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: #2a2a3a;
+            border-radius: 40px;
+            padding: 4px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            flex: 1;
+            min-width: 50px;
+            padding: 8px 0;
+            border: none;
+            background: transparent;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #a0a0b0;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+        .tab-btn.active {
+            background: #3a3a4a;
+            color: #f0f0f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Eingabe-Tab */
+        .jahr-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 14px;
+            background: #252535;
+            padding: 8px 12px;
+            border-radius: 40px;
+            border: 1px solid #33334a;
+        }
+        .jahr-row label {
+            font-weight: 600;
+            color: #c0c0d0;
+            font-size: 14px;
+        }
+        .jahr-row select {
+            flex: 1;
+            padding: 6px 12px;
+            border-radius: 40px;
+            border: 1px solid #44445a;
+            background: #1a1a2a;
+            color: #e0e0e0;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+        }
+        .jahr-row select option {
+            background: #1a1a2a;
+        }
+        .jahr-row .btn {
+            background: #4a8af4;
+            border: none;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.15s;
+            white-space: nowrap;
+        }
+        .jahr-row .btn:active { transform: scale(0.95); }
+        .jahr-row .btn.danger { background: #e74c3c; }
+
+        .input-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+            background: #252535;
+            padding: 10px 12px;
+            border-radius: 40px;
+            border: 1px solid #33334a;
+            align-items: center;
+        }
+        .input-row input[type="text"],
+        .input-row input[type="number"] {
+            background: #1a1a2a;
+            border: 1px solid #44445a;
+            border-radius: 40px;
+            padding: 6px 12px;
+            font-size: 14px;
+            color: #e0e0e0;
+            outline: none;
+        }
+        .input-row input[type="text"] {
+            flex: 2;
+            min-width: 60px;
+        }
+        .input-row input[type="number"] {
+            flex: 1;
+            min-width: 60px;
+            text-align: right;
+        }
+        .input-row .check {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #c0c0d0;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .input-row .check input {
+            width: 16px;
+            height: 16px;
+            accent-color: #e74c3c;
+            cursor: pointer;
+        }
+        .input-row .btn-add {
+            background: #3bb87a;
+            border: none;
+            color: white;
+            padding: 6px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .input-row .btn-add:active { transform: scale(0.95); background: #2a9d68; }
+
+        .voraus-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 12px;
+            background: #1e2a3a;
+            padding: 8px 12px;
+            border-radius: 40px;
+            border: 1px solid #2a3a4a;
+        }
+        .voraus-row label {
+            font-weight: 600;
+            color: #c0c0d0;
+            font-size: 14px;
+        }
+        .voraus-row input {
+            flex: 1;
+            min-width: 80px;
+            background: #1a1a2a;
+            border: 1px solid #44445a;
+            border-radius: 40px;
+            padding: 6px 12px;
+            font-size: 14px;
+            color: #e0e0e0;
+            outline: none;
+            text-align: right;
+        }
+        .voraus-row .btn {
+            background: #4a8af4;
+            border: none;
+            color: white;
+            padding: 6px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .voraus-row .btn:active { transform: scale(0.95); }
+
+        .liste {
+            background: #1f1f2f;
+            border-radius: 16px;
+            border: 1px solid #33334a;
+            padding: 4px 0;
+            margin-bottom: 14px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 14px;
+            border-bottom: 1px solid #2a2a3a;
+            font-size: 14px;
+        }
+        .item:last-child { border-bottom: none; }
+        .item .name {
+            font-weight: 500;
+            color: #e0e0e0;
+            flex: 1;
+        }
+        .item .tag {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 30px;
+            margin-right: 10px;
+            white-space: nowrap;
+        }
+        .tag.teilbar { background: #1a3a2a; color: #3bb87a; }
+        .tag.nicht-teilbar { background: #3a1a1a; color: #e74c3c; }
+        .tag.voraus { background: #3a3a1a; color: #d4a84a; }
+        .item .betrag {
+            font-weight: 600;
+            color: #e0e0e0;
+            min-width: 60px;
+            text-align: right;
+            margin-right: 8px;
+        }
+        .item .actions {
+            display: flex;
+            gap: 4px;
+        }
+        .item .actions button {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 2px 4px;
+            color: #8888a0;
+            transition: 0.15s;
+            line-height: 1;
+        }
+        .item .actions button:active { transform: scale(0.9); }
+        .item .actions .edit:active { color: #4a8af4; }
+        .item .actions .del:active { color: #e74c3c; }
+        .empty {
+            text-align: center;
+            padding: 20px 12px;
+            color: #8888a0;
+            font-size: 14px;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        .btn {
+            flex: 1;
+            min-width: 60px;
+            padding: 8px 10px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 13px;
+            border: 1px solid #44445a;
+            background: #252535;
+            color: #c0c0d0;
+            cursor: pointer;
+            transition: 0.15s;
+            text-align: center;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn.primary { background: #4a8af4; border-color: #4a8af4; color: white; }
+        .btn.danger { background: #e74c3c; border-color: #e74c3c; color: white; }
+
+        /* Berechnung-Tab */
+        .detail-box {
+            background: #1f1f2f;
+            border-radius: 16px;
+            padding: 14px 16px;
+            border: 1px solid #33334a;
+        }
+        .detail-box .detail-zeile {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 4px;
+            border-bottom: 1px solid #2a2a3a;
+            font-size: 14px;
+        }
+        .detail-box .detail-zeile:last-child { border-bottom: none; }
+        .detail-box .detail-zeile .lbl {
+            color: #a0a0b0;
+        }
+        .detail-box .detail-zeile .val {
+            font-weight: 600;
+            color: #e0e0e0;
+        }
+        .detail-box .detail-zeile .val.rot { color: #e74c3c; }
+        .detail-box .detail-zeile .val.gruen { color: #3bb87a; }
+        .detail-box .detail-zeile .val.blau { color: #4a8af4; }
+
+        .detail-box .highlight-box {
+            background: #2a2a3a;
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .detail-box .highlight-box .lbl { color: #c0c0d0; }
+        .detail-box .highlight-box .val { color: #4a8af4; }
+        .detail-box .highlight-box .val.rot { color: #e74c3c; }
+        .detail-box .highlight-box .val.gruen { color: #3bb87a; }
+
+        .detail-box .erklaerung {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #a0a0b0;
+            background: #1a1a2a;
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid #2a2a3a;
+        }
+
+        /* Analyse-Tab - MOBIL OPTIMIERT, DARK */
+        .analyse-box .kopf {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: #1f1f2f;
+            padding: 14px 16px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #33334a;
+        }
+        .analyse-box .kopf .zeile {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+        }
+        .analyse-box .kopf .zeile .label {
+            color: #a0a0b0;
+            font-size: 15px;
+        }
+        .analyse-box .kopf .zeile .wert {
+            font-weight: 700;
+            font-size: 18px;
+        }
+        .analyse-box .kopf .zeile .wert.positiv { color: #3bb87a; }
+        .analyse-box .kopf .zeile .wert.negativ { color: #e74c3c; }
+        .analyse-box .kopf .zeile .wert.null { color: #8888a0; }
+        .analyse-box .kopf .zeile .status {
+            font-size: 14px;
+            color: #a0a0b0;
+        }
+
+        .analyse-box .jahr-liste {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .analyse-box .jahr-karte {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1f1f2f;
+            border: 1px solid #33334a;
+            border-radius: 14px;
+            padding: 12px 16px;
+            transition: 0.15s;
+        }
+        .analyse-box .jahr-karte:active { background: #2a2a3a; }
+        .analyse-box .jahr-karte .jahr {
+            font-weight: 700;
+            font-size: 16px;
+            color: #e0e0e0;
+            min-width: 50px;
+        }
+        .analyse-box .jahr-karte .kosten {
+            font-weight: 600;
+            color: #e0e0e0;
+            font-size: 15px;
+        }
+        .analyse-box .jahr-karte .ergebnis {
+            font-weight: 700;
+            font-size: 16px;
+            min-width: 80px;
+            text-align: right;
+        }
+        .analyse-box .jahr-karte .ergebnis.positiv { color: #3bb87a; }
+        .analyse-box .jahr-karte .ergebnis.negativ { color: #e74c3c; }
+        .analyse-box .jahr-karte .ergebnis.null { color: #8888a0; }
+
+        .analyse-box .gesamt-box {
+            margin-top: 12px;
+            background: #1e2a3a;
+            border-radius: 14px;
+            padding: 14px 16px;
+            border: 1px solid #2a3a4a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .analyse-box .gesamt-box .label {
+            color: #c0c0d0;
+        }
+        .analyse-box .gesamt-box .wert {
+            color: #4a8af4;
+        }
+        .analyse-box .gesamt-box .wert.positiv { color: #3bb87a; }
+        .analyse-box .gesamt-box .wert.negativ { color: #e74c3c; }
+        .analyse-box .gesamt-box .wert.null { color: #8888a0; }
+
+        .analyse-box .erklaerung {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #a0a0b0;
+            background: #1a1a2a;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid #2a2a3a;
+        }
+
+        /* Backup-Tab */
+        .backup-box {
+            padding: 16px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .backup-box .big-btn {
+            padding: 16px;
+            border-radius: 60px;
+            border: 2px dashed #44445a;
+            background: #1f1f2f;
+            font-weight: 600;
+            font-size: 17px;
+            color: #c0c0d0;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+        .backup-box .big-btn:active { background: #2a2a3a; transform: scale(0.97); }
+        .backup-box .big-btn.export { border-color: #4a8af4; color: #4a8af4; }
+        .backup-box .big-btn.import { border-color: #3bb87a; color: #3bb87a; }
+        .backup-box .big-btn.pdf { border-color: #e74c3c; color: #e74c3c; }
+        #fileInput { display: none; }
+
+        /* Druck-Stylesheet für PDF */
+        @media print {
+            body { background: white; padding: 0; }
+            .app { box-shadow: none; border-radius: 0; padding: 20px; background: white; }
+            .tabs, .tab-btn, .action-row, .jahr-row, .input-row, .voraus-row, .liste, .btn, .backup-box .big-btn { display: none !important; }
+            .tab-content { display: block !important; }
+            #tab-analyse { display: block !important; }
+            .analyse-box .kopf, .analyse-box .jahr-karte, .analyse-box .gesamt-box, .analyse-box .erklaerung {
+                background: #f5f5f5 !important;
+                border-color: #ccc !important;
+                color: #111 !important;
+            }
+            .analyse-box .kopf .zeile .wert,
+            .analyse-box .jahr-karte .ergebnis,
+            .analyse-box .gesamt-box .wert {
+                color: #111 !important;
+            }
+            .analyse-box .jahr-karte .ergebnis.positiv { color: #0b8a5e !important; }
+            .analyse-box .jahr-karte .ergebnis.negativ { color: #e74c3c !important; }
+            .analyse-box .kopf .zeile .wert.positiv { color: #0b8a5e !important; }
+            .analyse-box .kopf .zeile .wert.negativ { color: #e74c3c !important; }
+            .analyse-box .gesamt-box .wert.positiv { color: #0b8a5e !important; }
+            .analyse-box .gesamt-box .wert.negativ { color: #e74c3c !important; }
+            .analyse-box .erklaerung { color: #333 !important; }
+            .analyse-box .jahr-karte .kosten { color: #111 !important; }
+            .analyse-box .jahr-karte .jahr { color: #111 !important; }
+            .analyse-box .kopf .zeile .label { color: #333 !important; }
+            .detail-box { display: none !important; }
+            #tab-backup { display: none !important; }
+            #tab-eingabe { display: none !important; }
+            #tab-berechnung { display: none !important; }
+            .app { max-width: 100%; }
+            .header h1 { color: #111; }
+        }
+
+        @media (max-width: 500px) {
+            .app { padding: 14px; }
+            .input-row, .voraus-row, .jahr-row { flex-direction: column; align-items: stretch; }
+            .header { flex-direction: column; align-items: flex-start; gap: 4px; }
+            .tabs { flex-wrap: wrap; }
+            .tab-btn { min-width: 40%; font-size: 12px; padding: 6px 0; }
+            .analyse-box .kopf .zeile { font-size: 14px; }
+            .analyse-box .kopf .zeile .wert { font-size: 16px; }
+            .analyse-box .jahr-karte { padding: 10px 12px; font-size: 14px; }
+            .analyse-box .jahr-karte .ergebnis { font-size: 14px; min-width: 60px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+
+        <!-- Header (ohne Badge) -->
+        <div class="header">
+            <h1>📋 Nebenkosten</h1>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="eingabe">📝 Eingabe</button>
+            <button class="tab-btn" data-tab="berechnung">🧮 Berechnung</button>
+            <button class="tab-btn" data-tab="analyse">📊 Analyse</button>
+            <button class="tab-btn" data-tab="backup">💾 Backup</button>
+        </div>
+
+        <!-- TAB 1: Eingabe -->
+        <div class="tab-content active" id="tab-eingabe">
+            <div class="jahr-row">
+                <label for="jahrSelect">Jahr</label>
+                <select id="jahrSelect"></select>
+                <button class="btn" id="neuesJahrBtn">+ Neu</button>
+                <button class="btn danger" id="jahrLoeschenBtn">✕</button>
+            </div>
+
+            <div class="input-row">
+                <input type="text" id="posName" placeholder="Name (z.B. Wasser)" value="">
+                <input type="number" id="posBetrag" placeholder="Betrag" value="" step="0.01" min="0">
+                <label class="check">
+                    <input type="checkbox" id="nichtTeilen"> nicht teilen
+                </label>
+                <button class="btn-add" id="addBtn">+</button>
+            </div>
+
+            <div class="voraus-row">
+                <label for="vorausBetrag">💰 Voraus (gesamt)</label>
+                <input type="number" id="vorausBetrag" placeholder="z.B. 1800" value="" step="0.01" min="0">
+                <button class="btn" id="vorausBtn">Speichern</button>
+            </div>
+
+            <div class="liste" id="positionListe">
+                <div class="empty">Keine Einträge</div>
+            </div>
+
+            <div class="action-row">
+                <button class="btn primary" id="aktualisierenBtn">🔄 Aktualisieren</button>
+                <button class="btn danger" id="alleLoeschenBtn">🗑 Alle löschen</button>
+            </div>
+        </div>
+
+        <!-- TAB 2: Berechnung -->
+        <div class="tab-content" id="tab-berechnung">
+            <div class="detail-box" id="detailBox">
+                <div id="detailInhalt">
+                    <p style="color:#8888a0; text-align:center; padding:16px 0;">Bitte Daten eingeben.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: Analyse (kein Aktualisieren-Button) -->
+        <div class="tab-content" id="tab-analyse">
+            <div class="analyse-box">
+                <h2 style="font-size:17px; color:#e0e0e0; margin-bottom:12px;">📊 Übersicht</h2>
+                <div id="analyseInhalt">
+                    <p style="color:#8888a0; text-align:center; padding:16px 0;">Lade Daten...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: Backup (mit PDF-Button) -->
+        <div class="tab-content" id="tab-backup">
+            <div class="backup-box">
+                <button class="big-btn export" id="backupBtn">📤 Exportieren (JSON)</button>
+                <button class="big-btn import" id="restoreBtn">📥 Importieren</button>
+                <button class="big-btn pdf" id="pdfBtn">📄 PDF erstellen</button>
+                <input type="file" id="fileInput" accept=".json">
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        (function() {
+            "use strict";
+
+            // ----- DOM -----
+            const jahrSelect = document.getElementById('jahrSelect');
+            const neuesJahrBtn = document.getElementById('neuesJahrBtn');
+            const jahrLoeschenBtn = document.getElementById('jahrLoeschenBtn');
+            const posNameInput = document.getElementById('posName');
+            const posBetragInput = document.getElementById('posBetrag');
+            const nichtTeilenCheck = document.getElementById('nichtTeilen');
+            const addBtn = document.getElementById('addBtn');
+            const vorausBetrag = document.getElementById('vorausBetrag');
+            const vorausBtn = document.getElementById('vorausBtn');
+            const positionListe = document.getElementById('positionListe');
+            const aktualisierenBtn = document.getElementById('aktualisierenBtn');
+            const alleLoeschenBtn = document.getElementById('alleLoeschenBtn');
+            const detailInhalt = document.getElementById('detailInhalt');
+            const analyseInhalt = document.getElementById('analyseInhalt');
+            const backupBtn = document.getElementById('backupBtn');
+            const restoreBtn = document.getElementById('restoreBtn');
+            const pdfBtn = document.getElementById('pdfBtn');
+            const fileInput = document.getElementById('fileInput');
+
+            // Tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    const tabId = this.dataset.tab;
+                    document.getElementById('tab-' + tabId).classList.add('active');
+                    if (tabId === 'berechnung') renderBerechnung();
+                    if (tabId === 'analyse') renderAnalyse();
+                });
+            });
+
+            // ----- State -----
+            let daten = {};
+            let aktuellesJahr = '';
+
+            const formatter = new Intl.NumberFormat('de-DE', {
+                style: 'currency',
+                currency: 'EUR',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            function parseBetrag(val) {
+                if (typeof val === 'string') val = val.replace(',', '.');
+                const n = parseFloat(val);
+                return isNaN(n) || n < 0 ? 0 : n;
+            }
+
+            function escapeHtml(t) {
+                const d = document.createElement('div');
+                d.textContent = t;
+                return d.innerHTML;
+            }
+
+            function getDefaultJahr() { return new Date().getFullYear().toString(); }
+
+            function getJahre() { return Object.keys(daten).sort().reverse(); }
+
+            function getPositionen(j) { return daten[j]?.positionen || []; }
+
+            function getVoraus(j) { return daten[j]?.voraus || 0; }
+
+            function setDaten(j, positionen, voraus) {
+                if (!daten[j]) daten[j] = {};
+                daten[j].positionen = positionen || [];
+                daten[j].voraus = voraus || 0;
+                speichern();
+            }
+
+            // ----- Speichern -----
+            function speichern() {
+                try {
+                    localStorage.setItem('nkdaten', JSON.stringify(daten));
+                    localStorage.setItem('nkjahr', aktuellesJahr);
+                } catch (e) { console.warn(e); }
+            }
+
+            function laden() {
+                try {
+                    const stored = localStorage.getItem('nkdaten');
+                    if (stored) {
+                        daten = JSON.parse(stored);
+                        for (let j in daten) {
+                            if (!daten[j].positionen) daten[j].positionen = [];
+                            if (typeof daten[j].voraus !== 'number') daten[j].voraus = 0;
+                            daten[j].positionen = daten[j].positionen.filter(p =>
+                                typeof p.name === 'string' &&
+                                typeof p.betrag === 'number' && !isNaN(p.betrag) &&
+                                typeof p.nichtTeilen === 'boolean'
+                            );
+                        }
+                    } else {
+                        const j = getDefaultJahr();
+                        daten[j] = {
+                            positionen: [
+                                { name: 'Wasser', betrag: 45, nichtTeilen: false },
+                                { name: 'Strom', betrag: 78.5, nichtTeilen: false },
+                                { name: 'Heizung', betrag: 120, nichtTeilen: false },
+                                { name: 'Grundsteuer', betrag: 65, nichtTeilen: true },
+                                { name: 'Versicherung', betrag: 28.9, nichtTeilen: false }
+                            ],
+                            voraus: 1800
+                        };
+                    }
+                    const jahr = localStorage.getItem('nkjahr');
+                    if (jahr && daten[jahr]) aktuellesJahr = jahr;
+                    else {
+                        const jahre = getJahre();
+                        aktuellesJahr = jahre.length ? jahre[0] : getDefaultJahr();
+                        if (!daten[aktuellesJahr]) daten[aktuellesJahr] = { positionen: [], voraus: 0 };
+                    }
+                    return true;
+                } catch (e) {
+                    const j = getDefaultJahr();
+                    daten = {};
+                    daten[j] = { positionen: [], voraus: 0 };
+                    aktuellesJahr = j;
+                    speichern();
+                    return true;
+                }
+            }
+
+            // ----- Edit-Funktion -----
+            function editPosition(index) {
+                const pos = getPositionen(aktuellesJahr);
+                if (index < 0 || index >= pos.length) return;
+                const p = pos[index];
+                const newName = prompt('Name:', p.name);
+                if (newName === null) return;
+                const newBetragRaw = prompt('Betrag:', p.betrag.toFixed(2));
+                if (newBetragRaw === null) return;
+                const newBetrag = parseBetrag(newBetragRaw);
+                if (newBetrag === 0 && newBetragRaw !== '0' && newBetragRaw !== '0.00') {
+                    alert('Ungültiger Betrag.');
+                    return;
+                }
+                const newNichtTeilen = confirm('Nicht teilen? (OK = ja, Abbrechen = nein)');
+                pos[index] = { name: newName.trim() || p.name, betrag: newBetrag, nichtTeilen: newNichtTeilen };
+                setDaten(aktuellesJahr, pos, getVoraus(aktuellesJahr));
+                renderEingabe();
+                renderBerechnung();
+                renderAnalyse();
+            }
+
+            // ----- Rendern Eingabe -----
+            function renderEingabe() {
+                const jahre = getJahre();
+                const aktuellerWert = jahrSelect.value;
+                jahrSelect.innerHTML = '';
+                if (jahre.length === 0) {
+                    const opt = document.createElement('option');
+                    opt.value = getDefaultJahr();
+                    opt.textContent = getDefaultJahr();
+                    jahrSelect.appendChild(opt);
+                    if (!daten[getDefaultJahr()]) daten[getDefaultJahr()] = { positionen: [], voraus: 0 };
+                } else {
+                    jahre.forEach(j => {
+                        const opt = document.createElement('option');
+                        opt.value = j;
+                        opt.textContent = j;
+                        jahrSelect.appendChild(opt);
+                    });
+                }
+                if (aktuellerWert && daten[aktuellerWert]) jahrSelect.value = aktuellerWert;
+                else if (jahre.length) jahrSelect.value = jahre[0];
+                aktuellesJahr = jahrSelect.value;
+
+                const positionen = getPositionen(aktuellesJahr);
+                const voraus = getVoraus(aktuellesJahr);
+
+                vorausBetrag.value = voraus > 0 ? voraus.toFixed(2) : '';
+
+                if (positionen.length === 0 && voraus === 0) {
+                    positionListe.innerHTML = `<div class="empty">Keine Einträge</div>`;
+                } else {
+                    let html = '';
+                    if (voraus > 0) {
+                        html += `
+                            <div class="item" data-type="voraus">
+                                <span class="name">💰 Vorauszahlung (gesamt)</span>
+                                <span class="tag voraus">Voraus</span>
+                                <span class="betrag" style="color:#3bb87a;">${formatter.format(voraus)}</span>
+                                <div class="actions">
+                                    <button class="del" data-type="voraus" title="Löschen">✕</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    positionen.forEach((p, i) => {
+                        const tagClass = p.nichtTeilen ? 'nicht-teilbar' : 'teilbar';
+                        const tagText = p.nichtTeilen ? 'nicht geteilt' : 'geteilt';
+                        html += `
+                            <div class="item" data-type="pos" data-index="${i}">
+                                <span class="name">${escapeHtml(p.name)}</span>
+                                <span class="tag ${tagClass}">${tagText}</span>
+                                <span class="betrag">${formatter.format(p.betrag)}</span>
+                                <div class="actions">
+                                    <button class="edit" data-index="${i}" title="Bearbeiten">✎</button>
+                                    <button class="del" data-index="${i}" title="Löschen">✕</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    positionListe.innerHTML = html;
+
+                    document.querySelectorAll('.item .edit').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const idx = parseInt(this.dataset.index);
+                            if (!isNaN(idx)) editPosition(idx);
+                        });
+                    });
+
+                    document.querySelectorAll('.item .del').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const type = this.dataset.type;
+                            if (type === 'voraus') {
+                                if (confirm('Vorauszahlung löschen?')) {
+                                    setDaten(aktuellesJahr, getPositionen(aktuellesJahr), 0);
+                                    renderEingabe();
+                                    renderBerechnung();
+                                    renderAnalyse();
+                                }
+                            } else if (type === 'pos') {
+                                const idx = parseInt(this.dataset.index);
+                                const pos = getPositionen(aktuellesJahr);
+                                if (!isNaN(idx) && idx >= 0 && idx < pos.length) {
+                                    if (confirm(`"${pos[idx].name}" löschen?`)) {
+                                        pos.splice(idx, 1);
+                                        setDaten(aktuellesJahr, pos, getVoraus(aktuellesJahr));
+                                        renderEingabe();
+                                        renderBerechnung();
+                                        renderAnalyse();
+                                    }
+                                }
+                            }
+                        });
+                    });
+                }
+                speichern();
+            }
+
+            // ----- Rendern Berechnung -----
+            function renderBerechnung() {
+                const pos = getPositionen(aktuellesJahr);
+                const vor = getVoraus(aktuellesJahr);
+                if (pos.length === 0 && vor === 0) {
+                    detailInhalt.innerHTML = `<p style="color:#8888a0; text-align:center; padding:16px 0;">Keine Daten für ${aktuellesJahr}.</p>`;
+                    return;
+                }
+
+                let gesamt = 0,
+                    nicht = 0,
+                    zuTeilen = 0;
+                pos.forEach(p => {
+                    gesamt += p.betrag;
+                    if (p.nichtTeilen) nicht += p.betrag;
+                    else zuTeilen += p.betrag;
+                });
+                const halb = zuTeilen / 2;
+                const vermieterBrutto = halb + nicht;
+                const ergebnis = vor - vermieterBrutto;
+
+                let html = `
+                    <h3 style="margin-bottom:10px; font-size:16px; color:#e0e0e0;">📅 ${aktuellesJahr} – Berechnung</h3>
+                    <div class="detail-zeile">
+                        <span class="lbl">📊 Gesamt</span>
+                        <span class="val">${formatter.format(gesamt)}</span>
+                    </div>
+                    <div class="detail-zeile">
+                        <span class="lbl" style="color:#e74c3c;">🚫 nicht geteilt</span>
+                        <span class="val rot">${formatter.format(nicht)}</span>
+                    </div>
+                    <div class="detail-zeile">
+                        <span class="lbl">📊 zu teilen</span>
+                        <span class="val">${formatter.format(zuTeilen)}</span>
+                    </div>
+                    <div class="detail-zeile">
+                        <span class="lbl">🧑‍💼 Mieter (½)</span>
+                        <span class="val blau">${formatter.format(halb)}</span>
+                    </div>
+                    <div class="detail-zeile">
+                        <span class="lbl" style="color:#3bb87a;">💰 Voraus</span>
+                        <span class="val gruen">${formatter.format(vor)}</span>
+                    </div>
+                    <div class="detail-zeile" style="border-bottom:2px solid #2a2a3a;">
+                        <span class="lbl">📊 Vermieter (brutto)</span>
+                        <span class="val">${formatter.format(vermieterBrutto)}</span>
+                    </div>
+                    <div class="highlight-box">
+                        <span class="lbl">💰 Vermieter (netto)</span>
+                        <span class="val ${ergebnis > 0 ? 'gruen' : (ergebnis < 0 ? 'rot' : '')}">${formatter.format(ergebnis)}</span>
+                    </div>
+                    <div class="highlight-box" style="background:#1a2a2a; margin-top:6px;">
+                        <span class="lbl">📊 Mieter zahlt</span>
+                        <span class="val gruen">${formatter.format(halb)}</span>
+                    </div>
+                    <div class="erklaerung">
+                        <strong>💡</strong> <span style="color:#3bb87a;">Positiv</span> = Guthaben für Vermieter · <span style="color:#e74c3c;">Negativ</span> = Nachzahlung
+                    </div>
+                `;
+                detailInhalt.innerHTML = html;
+            }
+
+            // ----- Rendern Analyse (ohne Button, automatisch) -----
+            function renderAnalyse() {
+                const jahre = getJahre();
+                if (jahre.length === 0) {
+                    analyseInhalt.innerHTML = `<p style="color:#8888a0; text-align:center; padding:16px 0;">Keine Daten vorhanden.</p>`;
+                    return;
+                }
+
+                let sumKosten = 0,
+                    sumVoraus = 0,
+                    sumErgebnis = 0;
+
+                let kopfHtml = `<div class="kopf">`;
+                let jahrKartenHtml = `<div class="jahr-liste">`;
+                jahre.forEach(j => {
+                    const pos = getPositionen(j);
+                    const vor = getVoraus(j);
+                    let kosten = 0;
+                    pos.forEach(p => kosten += p.betrag);
+                    const erg = vor - kosten;
+                    sumKosten += kosten;
+                    sumVoraus += vor;
+                    sumErgebnis += erg;
+
+                    const ergClass = erg > 0 ? 'positiv' : (erg < 0 ? 'negativ' : 'null');
+                    jahrKartenHtml += `
+                        <div class="jahr-karte">
+                            <span class="jahr">${j}</span>
+                            <span class="kosten">Kosten ${formatter.format(kosten)}</span>
+                            <span class="ergebnis ${ergClass}">${formatter.format(erg)}</span>
+                        </div>
+                    `;
+                });
+                jahrKartenHtml += `</div>`;
+
+                const gesamtErgClass = sumErgebnis > 0 ? 'positiv' : (sumErgebnis < 0 ? 'negativ' : 'null');
+                const gesamtText = sumErgebnis > 0 ? 'Guthaben für Vermieter' : (sumErgebnis < 0 ? 'Nachzahlung durch Vermieter' :
+                    'Ausgeglichen');
+
+                kopfHtml += `
+                    <div class="zeile">
+                        <span class="label">📊 Gesamtkosten</span>
+                        <span class="wert">${formatter.format(sumKosten)}</span>
+                    </div>
+                    <div class="zeile">
+                        <span class="label">💰 Vorauszahlungen</span>
+                        <span class="wert">${formatter.format(sumVoraus)}</span>
+                    </div>
+                    <div class="zeile" style="border-top:1px solid #2a2a3a; padding-top:6px; margin-top:4px;">
+                        <span class="label">📈 Ergebnis</span>
+                        <span>
+                            <span class="wert ${gesamtErgClass}">${formatter.format(sumErgebnis)}</span>
+                            <span class="status">(${gesamtText})</span>
+                        </span>
+                    </div>
+                `;
+                kopfHtml += `</div>`;
+
+                const gesamtBoxHtml = `
+                    <div class="gesamt-box">
+                        <span class="label">📊 Gesamtergebnis</span>
+                        <span class="wert ${gesamtErgClass}">${formatter.format(sumErgebnis)}</span>
+                    </div>
+                `;
+
+                const erklaerung = `
+                    <div class="erklaerung">
+                        <strong>💡</strong> <span style="color:#3bb87a;">Positiv</span> = Vermieter hat zu viel gezahlt (Guthaben) · <span style="color:#e74c3c;">Negativ</span> = Vermieter muss nachzahlen.
+                    </div>
+                `;
+
+                analyseInhalt.innerHTML = kopfHtml + jahrKartenHtml + gesamtBoxHtml + erklaerung;
+            }
+
+            // ----- Funktionen Eingabe -----
+            function fuegePosition() {
+                const name = posNameInput.value.trim();
+                const betragRaw = posBetragInput.value.trim();
+                const nichtTeilen = nichtTeilenCheck.checked;
+                if (!name) { alert('Bitte Name eingeben.'); return; }
+                const betrag = parseBetrag(betragRaw);
+                if (betrag === 0) { alert('Bitte gültigen Betrag.'); return; }
+                const pos = getPositionen(aktuellesJahr);
+                pos.push({ name, betrag, nichtTeilen });
+                setDaten(aktuellesJahr, pos, getVoraus(aktuellesJahr));
+                renderEingabe();
+                renderBerechnung();
+                renderAnalyse();
+                posNameInput.value = '';
+                posBetragInput.value = '';
+                nichtTeilenCheck.checked = false;
+                posNameInput.focus();
+            }
+
+            function setVoraus() {
+                const betrag = parseBetrag(vorausBetrag.value);
+                setDaten(aktuellesJahr, getPositionen(aktuellesJahr), betrag);
+                renderEingabe();
+                renderBerechnung();
+                renderAnalyse();
+            }
+
+            function neuesJahr() {
+                const j = prompt('Neues Jahr:', (parseInt(getDefaultJahr()) + 1).toString());
+                if (j && j.trim()) {
+                    const jahr = j.trim();
+                    if (!daten[jahr]) {
+                        daten[jahr] = { positionen: [], voraus: 0 };
+                        aktuellesJahr = jahr;
+                        speichern();
+                        renderEingabe();
+                        renderBerechnung();
+                        renderAnalyse();
+                    } else {
+                        alert('Jahr existiert bereits.');
+                    }
+                }
+            }
+
+            function loescheJahr() {
+                const jahr = jahrSelect.value;
+                if (!jahr || !daten[jahr]) return;
+                if (confirm(`Jahr ${jahr} löschen?`)) {
+                    delete daten[jahr];
+                    const jahre = getJahre();
+                    if (jahre.length === 0) {
+                        const neu = getDefaultJahr();
+                        daten[neu] = { positionen: [], voraus: 0 };
+                        aktuellesJahr = neu;
+                    } else {
+                        aktuellesJahr = jahre[0];
+                    }
+                    speichern();
+                    renderEingabe();
+                    renderBerechnung();
+                    renderAnalyse();
+                }
+            }
+
+            function loescheAlle() {
+                const pos = getPositionen(aktuellesJahr);
+                const vor = getVoraus(aktuellesJahr);
+                if (pos.length === 0 && vor === 0) return;
+                if (confirm(`Alle Einträge für ${aktuellesJahr} löschen?`)) {
+                    setDaten(aktuellesJahr, [], 0);
+                    renderEingabe();
+                    renderBerechnung();
+                    renderAnalyse();
+                }
+            }
+
+            // ----- Backup -----
+            function exportBackup() {
+                const json = JSON.stringify(daten, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `nebenkosten_${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            function restoreBackup() {
+                fileInput.click();
+            }
+
+            function handleFile(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    try {
+                        const geladen = JSON.parse(ev.target.result);
+                        if (typeof geladen === 'object' && !Array.isArray(geladen)) {
+                            let ok = true;
+                            for (let j in geladen) {
+                                if (!geladen[j].positionen || typeof geladen[j].voraus !== 'number') { ok = false; break; }
+                                geladen[j].positionen = geladen[j].positionen.filter(p =>
+                                    typeof p.name === 'string' &&
+                                    typeof p.betrag === 'number' && !isNaN(p.betrag) &&
+                                    typeof p.nichtTeilen === 'boolean'
+                                );
+                            }
+                            if (ok) {
+                                daten = geladen;
+                                const jahre = getJahre();
+                                aktuellesJahr = jahre.length ? jahre[0] : getDefaultJahr();
+                                if (!daten[aktuellesJahr]) daten[aktuellesJahr] = { positionen: [], voraus: 0 };
+                                speichern();
+                                renderEingabe();
+                                renderBerechnung();
+                                renderAnalyse();
+                                alert('Import erfolgreich.');
+                            } else {
+                                throw new Error('Ungültiges Format');
+                            }
+                        } else {
+                            throw new Error('Ungültiges Format');
+                        }
+                    } catch (err) {
+                        alert('Fehler beim Import: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+                fileInput.value = '';
+            }
+
+            // PDF-Erstellung via window.print()
+            function createPDF() {
+                window.print();
+            }
+
+            // ----- Events -----
+            addBtn.addEventListener('click', fuegePosition);
+            posNameInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault();
+                    fuegePosition(); } });
+            posBetragInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault();
+                    fuegePosition(); } });
+            vorausBtn.addEventListener('click', setVoraus);
+            vorausBetrag.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault();
+                    setVoraus(); } });
+
+            aktualisierenBtn.addEventListener('click', function() {
+                renderEingabe();
+                renderBerechnung();
+                renderAnalyse();
+            });
+            alleLoeschenBtn.addEventListener('click', loescheAlle);
+            neuesJahrBtn.addEventListener('click', neuesJahr);
+            jahrLoeschenBtn.addEventListener('click', loescheJahr);
+            jahrSelect.addEventListener('change', function() {
+                aktuellesJahr = this.value;
+                renderEingabe();
+                renderBerechnung();
+                renderAnalyse();
+            });
+
+            backupBtn.addEventListener('click', exportBackup);
+            restoreBtn.addEventListener('click', restoreBackup);
+            pdfBtn.addEventListener('click', createPDF);
+            fileInput.addEventListener('change', handleFile);
+
+            // ----- Start -----
+            laden();
+            renderEingabe();
+            renderBerechnung();
+            renderAnalyse();
+
+        })();
+    </script>
+</body>
+</html>
