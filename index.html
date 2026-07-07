@@ -39,8 +39,6 @@
             font-weight: 700;
             color: #f0f0f0;
         }
-        /* Badge entfernt */
-
         .tabs {
             display: flex;
             gap: 4px;
@@ -542,12 +540,10 @@
 <body>
     <div class="app">
 
-        <!-- Header (ohne Badge) -->
         <div class="header">
             <h1>📋 Nebenkosten</h1>
         </div>
 
-        <!-- Tabs -->
         <div class="tabs">
             <button class="tab-btn active" data-tab="eingabe">📝 Eingabe</button>
             <button class="tab-btn" data-tab="berechnung">🧮 Berechnung</button>
@@ -598,7 +594,7 @@
             </div>
         </div>
 
-        <!-- TAB 3: Analyse (zeigt Mieter-Saldo) -->
+        <!-- TAB 3: Analyse (Mieter-Saldo) -->
         <div class="tab-content" id="tab-analyse">
             <div class="analyse-box">
                 <h2 style="font-size:17px; color:#e0e0e0; margin-bottom:12px;">📊 Übersicht (Mieter-Saldo)</h2>
@@ -816,7 +812,7 @@
                     }
                     positionen.forEach((p, i) => {
                         const tagClass = p.nichtTeilen ? 'nicht-teilbar' : 'teilbar';
-                        const tagText = p.nichtTeilen ? 'nicht geteilt' : 'geteilt';
+                        const tagText = p.nichtTeilen ? 'nur Mieter' : 'geteilt';
                         html += `
                             <div class="item" data-type="pos" data-index="${i}">
                                 <span class="name">${escapeHtml(p.name)}</span>
@@ -867,7 +863,7 @@
                 speichern();
             }
 
-            // ----- Rendern Berechnung (korrigierte Logik) -----
+            // ----- Rendern Berechnung (KORRIGIERTE LOGIK) -----
             function renderBerechnung() {
                 const pos = getPositionen(aktuellesJahr);
                 const voraus = getVoraus(aktuellesJahr);
@@ -877,17 +873,17 @@
                 }
 
                 let gesamt = 0,
-                    nicht = 0,
+                    nichtGeteilt = 0,
                     zuTeilen = 0;
                 pos.forEach(p => {
                     gesamt += p.betrag;
-                    if (p.nichtTeilen) nicht += p.betrag;
+                    if (p.nichtTeilen) nichtGeteilt += p.betrag; // nur Mieter
                     else zuTeilen += p.betrag;
                 });
-                const mieterAnteil = zuTeilen / 2;
-                const vermieterAnteil = mieterAnteil + nicht;
-                const saldoMieter = voraus - mieterAnteil;   // positiv = Mieter bekommt Geld zurück
-                const saldoVermieter = vermieterAnteil - voraus; // positiv = Vermieter muss noch zahlen
+
+                const mieterAnteil = (zuTeilen / 2) + nichtGeteilt;
+                const vermieterAnteil = zuTeilen / 2;
+                const saldoMieter = voraus - mieterAnteil; // positiv = Rückzahlung an Mieter
 
                 let html = `
                     <h3 style="margin-bottom:10px; font-size:16px; color:#e0e0e0;">📅 ${aktuellesJahr} – Berechnung</h3>
@@ -896,19 +892,19 @@
                         <span class="val">${formatter.format(gesamt)}</span>
                     </div>
                     <div class="detail-zeile">
-                        <span class="lbl" style="color:#e74c3c;">🚫 Nicht geteilt (nur Vermieter)</span>
-                        <span class="val rot">${formatter.format(nicht)}</span>
+                        <span class="lbl" style="color:#e74c3c;">🚫 Nur Mieter (nicht geteilt)</span>
+                        <span class="val rot">${formatter.format(nichtGeteilt)}</span>
                     </div>
                     <div class="detail-zeile">
-                        <span class="lbl">📊 Zu teilende Summe</span>
+                        <span class="lbl">📊 Zu teilende Summe (50:50)</span>
                         <span class="val">${formatter.format(zuTeilen)}</span>
                     </div>
                     <div class="detail-zeile">
-                        <span class="lbl">🧑‍💼 Mieter-Anteil (½)</span>
+                        <span class="lbl">🧑‍💼 Mieter-Anteil (½ + nicht geteilt)</span>
                         <span class="val blau">${formatter.format(mieterAnteil)}</span>
                     </div>
                     <div class="detail-zeile">
-                        <span class="lbl">🏢 Vermieter-Anteil (½ + nicht geteilt)</span>
+                        <span class="lbl">🏢 Vermieter-Anteil (½)</span>
                         <span class="val">${formatter.format(vermieterAnteil)}</span>
                     </div>
                     <div class="detail-zeile">
@@ -917,7 +913,7 @@
                     </div>
                     <div class="detail-zeile" style="border-bottom:2px solid #2a2a3a;">
                         <span class="lbl">📊 Saldo Vermieter (muss zahlen / bekommt)</span>
-                        <span class="val ${saldoVermieter > 0 ? 'rot' : (saldoVermieter < 0 ? 'gruen' : '')}">${formatter.format(saldoVermieter)}</span>
+                        <span class="val ${vermieterAnteil > voraus ? 'rot' : (vermieterAnteil < voraus ? 'gruen' : '')}">${formatter.format(vermieterAnteil - voraus)}</span>
                     </div>
                     <div class="highlight-box" style="background:#1a2a2a;">
                         <span class="lbl">💰 Saldo Mieter (Rückzahlung / Nachzahlung)</span>
@@ -931,13 +927,13 @@
                         <strong>💡 Erklärung:</strong><br>
                         • <span style="color:#3bb87a;">Positiver Saldo Mieter</span> = Mieter bekommt Geld zurück (Guthaben).<br>
                         • <span style="color:#e74c3c;">Negativer Saldo Mieter</span> = Mieter muss nachzahlen.<br>
-                        • Der Saldo des Vermieters ist das Gegenstück (aber unter Berücksichtigung der nicht geteilten Kosten).
+                        • "Nur Mieter" = Kosten, die nicht geteilt werden (nur Mieter).
                     </div>
                 `;
                 detailInhalt.innerHTML = html;
             }
 
-            // ----- Rendern Analyse (zeigt Mieter-Saldo) -----
+            // ----- Rendern Analyse (Mieter-Saldo) -----
             function renderAnalyse() {
                 const jahre = getJahre();
                 if (jahre.length === 0) {
@@ -954,24 +950,25 @@
                 jahre.forEach(j => {
                     const pos = getPositionen(j);
                     const vor = getVoraus(j);
-                    let kosten = 0,
+                    let gesamt = 0,
+                        nichtGeteilt = 0,
                         zuTeilen = 0;
                     pos.forEach(p => {
-                        kosten += p.betrag;
-                        if (!p.nichtTeilen) zuTeilen += p.betrag;
+                        gesamt += p.betrag;
+                        if (p.nichtTeilen) nichtGeteilt += p.betrag;
+                        else zuTeilen += p.betrag;
                     });
-                    const mieterAnteil = zuTeilen / 2;
+                    const mieterAnteil = (zuTeilen / 2) + nichtGeteilt;
                     const saldo = vor - mieterAnteil;
-                    sumKosten += kosten;
+                    sumKosten += gesamt;
                     sumVoraus += vor;
                     sumSaldoMieter += saldo;
 
                     const saldoClass = saldo > 0 ? 'positiv' : (saldo < 0 ? 'negativ' : 'null');
-                    const statusText = saldo > 0 ? '💰 Rückzahlung' : (saldo < 0 ? '💸 Nachzahlung' : '⚖️ Ausgeglichen');
                     jahrKartenHtml += `
                         <div class="jahr-karte">
                             <span class="jahr">${j}</span>
-                            <span class="kosten">Kosten ${formatter.format(kosten)}</span>
+                            <span class="kosten">Kosten ${formatter.format(gesamt)}</span>
                             <span class="saldo ${saldoClass}">${formatter.format(saldo)}</span>
                         </div>
                     `;
