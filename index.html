@@ -585,7 +585,7 @@
             </div>
         </div>
 
-        <!-- TAB 2: Berechnung (korrigierte Logik) -->
+        <!-- TAB 2: Berechnung (korrigierte Logik + klare Bezeichnungen) -->
         <div class="tab-content" id="tab-berechnung">
             <div class="detail-box" id="detailBox">
                 <div id="detailInhalt">
@@ -863,7 +863,7 @@
                 speichern();
             }
 
-            // ----- Rendern Berechnung (KORRIGIERTE LOGIK) -----
+            // ----- Rendern Berechnung (KORRIGIERTE LOGIK + KLARE BEZEICHNUNGEN) -----
             function renderBerechnung() {
                 const pos = getPositionen(aktuellesJahr);
                 const voraus = getVoraus(aktuellesJahr);
@@ -883,7 +883,8 @@
 
                 const mieterAnteil = (zuTeilen / 2) + nichtGeteilt;
                 const vermieterAnteil = zuTeilen / 2;
-                const saldoMieter = voraus - mieterAnteil; // positiv = Rückzahlung an Mieter
+                const saldoMieter = voraus - mieterAnteil; // positiv = Mieter bekommt zurück
+                const saldoVermieter = vermieterAnteil - voraus; // positiv = Vermieter bekommt noch Geld (Mieter zahlt nach)
 
                 let html = `
                     <h3 style="margin-bottom:10px; font-size:16px; color:#e0e0e0;">📅 ${aktuellesJahr} – Berechnung</h3>
@@ -912,8 +913,8 @@
                         <span class="val gruen">${formatter.format(voraus)}</span>
                     </div>
                     <div class="detail-zeile" style="border-bottom:2px solid #2a2a3a;">
-                        <span class="lbl">📊 Saldo Vermieter (muss zahlen / bekommt)</span>
-                        <span class="val ${vermieterAnteil > voraus ? 'rot' : (vermieterAnteil < voraus ? 'gruen' : '')}">${formatter.format(vermieterAnteil - voraus)}</span>
+                        <span class="lbl">📊 Saldo Vermieter (Nachzahlung/Rückzahlung)</span>
+                        <span class="val ${saldoVermieter > 0 ? 'rot' : (saldoVermieter < 0 ? 'gruen' : '')}">${formatter.format(saldoVermieter)}</span>
                     </div>
                     <div class="highlight-box" style="background:#1a2a2a;">
                         <span class="lbl">💰 Saldo Mieter (Rückzahlung / Nachzahlung)</span>
@@ -927,6 +928,8 @@
                         <strong>💡 Erklärung:</strong><br>
                         • <span style="color:#3bb87a;">Positiver Saldo Mieter</span> = Mieter bekommt Geld zurück (Guthaben).<br>
                         • <span style="color:#e74c3c;">Negativer Saldo Mieter</span> = Mieter muss nachzahlen.<br>
+                        • <span style="color:#e74c3c;">Positiver Saldo Vermieter</span> = Vermieter bekommt noch Geld (Mieter zahlt nach).<br>
+                        • <span style="color:#3bb87a;">Negativer Saldo Vermieter</span> = Vermieter muss zurückzahlen (Mieter bekommt Geld).<br>
                         • "Nur Mieter" = Kosten, die nicht geteilt werden (nur Mieter).
                     </div>
                 `;
